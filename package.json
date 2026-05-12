@@ -1,0 +1,30 @@
+{
+  "name": "milescx-daxko-mcp-server-sample-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Public demo: Express chat UI (dev) + OAuth2/bootstrap MCP smoke script (oauth-agent)",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "oauth-agent": "node src/index.js",
+    "bootstrap": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.0",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
