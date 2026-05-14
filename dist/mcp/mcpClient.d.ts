@@ -1,9 +1,11 @@
 /**
  * MCP client helpers — talk to your MCP server over **Streamable HTTP**.
  *
- * Design choice (good for demos and many hosted MCP servers):
- * we open a connection, perform **one** MCP operation (`listTools` or `callTool`), then close.
- * That keeps the sample stateless and easy to reason about; a production app might pool or reuse clients.
+ * We open a connection, perform **one** MCP operation (`listTools` or `callTool`), then close.
+ * That keeps lifecycle simple; a production app might pool transports.
+ *
+ * `tools/list` is cached in-process for `env.mcpToolsListTtlMs` (see `MCP_TOOLS_LIST_TTL_MS`) keyed by bearer
+ * token so new JWTs pick up a fresh catalog when credentials rotate.
  *
  * The `@modelcontextprotocol/sdk` package provides `Client` + `StreamableHTTPClientTransport`.
  * Auth is whatever the MCP server accepts as `Authorization: Bearer` — here an OAuth **`access_token`** (JWT)

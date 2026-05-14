@@ -33,7 +33,7 @@ You get a simple chat page. Your OpenAI account answers questions, and the serve
 
 ## 2. Command-line check (agent setup + list MCP tools)
 
-Use this when you are setting up an **automation agent** (not the long portal access key). It checks that you can get a **short-lived login ticket** for the MCP server and then asks the server to **list tools**.
+Use this when you are setting up an **automation agent** (OAuth / JWT toward MCP). It checks that you can get a **short-lived login ticket** for the MCP server and then asks the server to **list tools**.
 
 **Before you start:** From your admin portal, get the **token service** base URL, the **MCP server** URL, and either a **one-time bootstrap code** (right after you create an agent) or the **client id + secret** you saved after that first step.
 
@@ -64,7 +64,7 @@ You should see HTTP status output and a JSON snippet from the MCP server. If som
 ## Where to read more
 
 - **[README.md](./README.md)** — Overview of both flows and production build notes.
-- **[docs/README.md](./docs/README.md)** — List of other docs.
+- **[docs/INDEX.md](./docs/INDEX.md)** — List of other docs.
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — Pictures of how requests flow (optional read).
 
 **Putting the chat app on a real server:** run `npm run build`, then start it with `node dist/server.js`. The command-line check above always stays `node src/index.js` (via `npm run oauth-agent` or `npm run bootstrap`).

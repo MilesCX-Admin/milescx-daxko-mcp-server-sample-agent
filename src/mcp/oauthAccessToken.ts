@@ -2,6 +2,9 @@
  * Resolves an MCP `Authorization: Bearer` value via the Auth service:
  * optional one-time bootstrap → `client_credentials` → JWT `access_token`.
  *
+ * Tokens are reused in-process until shortly before `expires_in` (RFC 6749) to avoid hitting `/oauth/token` on
+ * every chat turn.
+ *
  * In-memory `client_id` / `client_secret` are filled after a successful bootstrap when `.env`
  * only had `BOOTSTRAP_TOKEN`; restart the process unless you copy them into `.env`.
  */
@@ -9,6 +12,12 @@ import { env } from '../config/env.js';
 
 let memoryClientId = '';
 let memoryClientSecret = '';
+
+/** Reuse `access_token` until shortly before OAuth says it expires (fewer `/oauth/token` calls). */
+let accessTokenCache: { token: string; expiresAtMs: number } | null = null;
+
+/** Refresh this many seconds before `expires_in` to avoid edge failures when clocks skew. */
+const OAUTH_EXPIRY_SKEW_SEC = 90;
 
 async function readJsonResponse(res: Response): Promise<{ text: string; json: Record<string, unknown> }> {
   const text = await res.text();
@@ -22,6 +31,11 @@ async function readJsonResponse(res: Response): Promise<{ text: string; json: Re
 }
 
 export async function getMcpOAuthAccessToken(): Promise<string> {
+  const now = Date.now();
+  if (accessTokenCache && now < accessTokenCache.expiresAtMs) {
+    return accessTokenCache.token;
+  }
+
   const base = env.authBaseUrl;
   let clientId = (env.oauthClientId || memoryClientId).trim();
   let clientSecret = (env.oauthClientSecret || memoryClientSecret).trim();
@@ -71,5 +85,21 @@ export async function getMcpOAuthAccessToken(): Promise<string> {
   if (!accessToken) {
     throw new Error('No access_token in OAuth token response');
   }
+
+  const rawExpiresIn = tokenJson.expires_in;
+  let expiresInSec =
+    typeof rawExpiresIn === 'number' && Number.isFinite(rawExpiresIn) && rawExpiresIn > 0
+      ? rawExpiresIn
+      : typeof rawExpiresIn === 'string'
+        ? Number.parseInt(rawExpiresIn, 10)
+        : NaN;
+  if (!Number.isFinite(expiresInSec) || expiresInSec <= 0) {
+    expiresInSec = 3600;
+  }
+  const usableSec = Math.max(expiresInSec - OAUTH_EXPIRY_SKEW_SEC, 30);
+  accessTokenCache = {
+    token: accessToken,
+    expiresAtMs: now + usableSec * 1000,
+  };
   return accessToken;
 }

@@ -21,6 +21,21 @@ function optionalEnv(name, defaultValue) {
     const v = process.env[name]?.trim();
     return v && v.length > 0 ? v : defaultValue;
 }
+/**
+ * In-memory MCP `tools/list` TTL (milliseconds). `0` or negative = disable caching (always hit MCP).
+ * Default **300_000** (5 minutes) — good balance for demos: fewer round-trips, still picks up new tools after deploy.
+ */
+function parseMcpToolsListTtlMs() {
+    const raw = process.env.MCP_TOOLS_LIST_TTL_MS?.trim();
+    if (raw === undefined || raw === '')
+        return 300_000;
+    const n = Number.parseInt(raw, 10);
+    if (!Number.isFinite(n))
+        return 300_000;
+    if (n <= 0)
+        return null;
+    return Math.max(n, 1000);
+}
 const oauthClientId = (process.env.CLIENT_ID ?? '').trim();
 const oauthClientSecret = (process.env.CLIENT_SECRET ?? '').trim();
 const bootstrapToken = (process.env.BOOTSTRAP_TOKEN ?? '').trim();
@@ -56,6 +71,8 @@ export const env = {
     openaiApiKey: requireEnv('OPENAI_API_KEY'),
     /** Chat model id (e.g. `gpt-4o-mini`). Override with `OPENAI_MODEL`. */
     openaiModel: optionalEnv('OPENAI_MODEL', 'gpt-4o-mini'),
+    /** See `parseMcpToolsListTtlMs` — env `MCP_TOOLS_LIST_TTL_MS`. */
+    mcpToolsListTtlMs: parseMcpToolsListTtlMs(),
     /**
      * Set `TRUST_PROXY=1` or `true` when TLS terminates in front of this app so Express honors forwarded headers.
      * See `src/server.ts` for `app.set('trust proxy', …)`.

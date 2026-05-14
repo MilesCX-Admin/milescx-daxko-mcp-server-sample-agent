@@ -20,6 +20,10 @@ Use your **admin portal** (or operator doc) for URLs, issuer base, bootstrap tok
 
 Secrets stay server-side; the browser only talks to this origin.
 
+The server caches **`client_credentials`** access tokens until shortly before **`expires_in`**, and MCP **`tools/list`** in memory for a short TTL (default five minutes, **`MCP_TOOLS_LIST_TTL_MS`**), so ordinary chat turns do not re-hit the token endpoint or list tools every time. See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
+
+For patterns when extending this code (token lifecycle, `tools/list` vs `tools/call`, scaling, env knobs), see [`docs/MCP_DEVELOPER_GUIDE.md`](./docs/MCP_DEVELOPER_GUIDE.md).
+
 ---
 
 ## OAuth agent / bootstrap (`npm run oauth-agent` / `npm run bootstrap`)
@@ -55,7 +59,7 @@ node dist/server.js
 ## Documentation
 
 - [QUICKSTART.md](./QUICKSTART.md) — fastest way to run both flows.
-- [docs/README.md](./docs/README.md) — index of deeper docs.
+- [docs/INDEX.md](./docs/INDEX.md) — index of deeper docs.
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — diagrams and env reference.
 
 ## Env

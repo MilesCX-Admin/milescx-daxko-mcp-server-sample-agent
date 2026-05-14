@@ -4,7 +4,8 @@
  * Flow (high level):
  * 1. Browser sends conversation turns + optional `user_context` JSON (see `public/js/chat-ui.js`).
  * 2. This handler validates input (sizes, shapes) so MCP / OpenAI never see unbounded payloads.
- * 3. We call MCP `tools/list` and convert tools to OpenAI format (`toolBridge.ts`).
+ * 3. We call MCP `tools/list` (cached in-process; see `mcpClient.ts` / `MCP_TOOLS_LIST_TTL_MS`) and convert tools
+ *    to OpenAI format (`toolBridge.ts`).
  * 4. We call OpenAI `chat.completions.create` with `tools` enabled. If the model returns `tool_calls`,
  *    we execute each via MCP `tools/call`, append `role: "tool"` messages, and ask OpenAI again — up to
  *    `MAX_TOOL_ROUNDS` times (safety cap for runaway loops).
@@ -12,7 +13,7 @@
  *
  * Secrets: `OPENAI_API_KEY` and OAuth agent credentials (`CLIENT_SECRET`, optional `BOOTSTRAP_TOKEN`) are read from
  * `env` only; they never appear in responses. MCP calls use `Authorization: Bearer <access_token>` from
- * `client_credentials` (same Auth service as `npm run oauth-agent`; see `src/mcp/oauthAccessToken.ts`).
+ * `client_credentials`, cached until near token expiry (see `src/mcp/oauthAccessToken.ts`).
  */
 import { Router } from 'express';
 import OpenAI from 'openai';
@@ -82,7 +83,6 @@ chatRouter.post('/chat', async (req, res) => {
     }
     try {
         const bearer = await getMcpOAuthAccessToken();
-        // Fresh tool list every request so new MCP deployments show up without restarting this app.
         const list = await mcpListTools(bearer);
         const oaTools = mcpToolsToOpenAi(list.tools ?? []);
         // Build OpenAI message array: system prompt, optional user-context system block, then chat history.

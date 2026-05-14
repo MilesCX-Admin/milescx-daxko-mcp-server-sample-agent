@@ -30,6 +30,8 @@ export declare const env: {
     openaiApiKey: string;
     /** Chat model id (e.g. `gpt-4o-mini`). Override with `OPENAI_MODEL`. */
     openaiModel: string;
+    /** See `parseMcpToolsListTtlMs` — env `MCP_TOOLS_LIST_TTL_MS`. */
+    mcpToolsListTtlMs: number | null;
     /**
      * Set `TRUST_PROXY=1` or `true` when TLS terminates in front of this app so Express honors forwarded headers.
      * See `src/server.ts` for `app.set('trust proxy', …)`.
